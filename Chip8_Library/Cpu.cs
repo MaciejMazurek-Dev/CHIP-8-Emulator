@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Chip8_Library
+﻿namespace Chip8_Library
 {
     internal class Cpu
     {
@@ -35,6 +29,68 @@ namespace Chip8_Library
         private ushort PC;
 
         //Stack Pointer
-        private byte SP;
+        private ushort SP;
+
+        //Instruction register
+        private ushort IR;
+
+
+
+        private Memory _memoryBus;
+        private Display _displayBus;
+
+
+        public Cpu(Memory memoryBus, Display display)
+        {
+            _memoryBus = memoryBus;
+            _displayBus = display;
+
+            PC = 512;
+            SP = 0;
+        }
+        public void Tick()
+        {
+            Fetch();
+            DecodeAndExecute();
+        }
+
+
+        private void Fetch()
+        {
+            IR = (ushort)(_memoryBus.GetByte(PC) << 8);
+            PC++;
+            IR = (ushort)(IR & 0xFF00 | _memoryBus.GetByte(PC));
+            PC++;
+        }
+
+        private void DecodeAndExecute()
+        {
+            switch(IR)
+            {
+                //CLS - Clear screen
+                case 0x00E0:
+                    _displayBus.ClearScreen();
+                    break;
+
+                //RET - Return from a subroutine
+                case 0x00EE:
+                    PC = _memoryBus.PopStack(SP);
+                    SP--;
+                    break;
+
+                
+
+
+
+
+            }
+
+        }
+
+
+
+
+
+
     }
 }

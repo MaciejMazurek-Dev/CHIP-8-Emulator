@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Chip8_Library\Chip8_Library.csproj" />
+  </ItemGroup>
+
 </Project>
