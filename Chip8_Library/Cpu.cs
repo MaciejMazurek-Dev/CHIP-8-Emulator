@@ -2,7 +2,7 @@
 {
     internal class Cpu
     {
-        //Data Registers
+        //Data Registers 8-bit
         private byte V0;
         private byte V1;
         private byte V2;
@@ -19,21 +19,20 @@
         private byte VD;
         private byte VE;
 
-        //FLAGS register
+        //FLAGS Register 8-bit 
         private byte VF;
 
-        //Address register
+        //Address Register 16-bit
         private ushort I;
 
-        //Program Counter
+        //Program Counter 16-bit
         private ushort PC;
 
-        //Stack Pointer
+        //Stack Pointer 16-bit
         private ushort SP;
 
-        //Instruction register
+        //Instruction Register 16-bit
         private ushort IR;
-
 
 
         private Memory _memoryBus;
@@ -45,15 +44,14 @@
             _memoryBus = memoryBus;
             _displayBus = display;
 
-            PC = 512;
-            SP = 0;
+            PC = 512; //0x200
+            SP = 4000;//0xFA0 
         }
         public void Tick()
         {
             Fetch();
             DecodeAndExecute();
         }
-
 
         private void Fetch()
         {
@@ -65,32 +63,98 @@
 
         private void DecodeAndExecute()
         {
-            switch(IR)
+            switch (IR & 0xF000)
             {
-                //CLS - Clear screen
-                case 0x00E0:
-                    _displayBus.ClearScreen();
+                case 0x0000:
+                    switch (IR)
+                    {
+                        //00E0 - CLS - Clear screen
+                        case 0x00E0:
+                            _displayBus.ClearScreen();
+                            break;
+
+                        //00EE - RET - Return from a subroutine
+                        case 0x00EE:
+                            PC = StackPOP();
+                            break;
+                    }
                     break;
 
-                //RET - Return from a subroutine
-                case 0x00EE:
-                    PC = _memoryBus.PopStack(SP);
-                    SP--;
+                //1NNN - Jump to address NNN
+                case 0x1000:
+                    PC = (ushort)(IR & 0x0FFF);
                     break;
 
-                
+                //2NNN - Call subroutine at address NNN
+                case 0x2000:
+                    StackPUSH(PC);
+                    PC = (ushort)(IR & 0x0FFF);
+                    break;
 
-
-
-
+                //3XNN - Skip the next instruction if register X equals NN
+                case 0x3000:
+                    byte registerNum = (byte)(IR & 0x0F00);
+                    byte value = (byte)(IR & 0x00FF);
+                    var register = GetRegister(ref registerNum);
+                    if(register == value)
+                    {
+                        PC++;
+                    }
+                    break;
             }
 
         }
 
-
-
-
-
-
+        private ushort StackPOP()
+        {
+            ushort result =  _memoryBus.GetWord(SP);
+            SP -= 2;
+            return result;
+        }
+        private void StackPUSH(ushort value)
+        {
+            _memoryBus.SetWord(SP, value);
+            SP += 2;
+        }
+        private ref byte GetRegister(ref byte register)
+        {
+            switch(register)
+            {
+                case 0x0:
+                    return ref V0;
+                case 0x1:
+                    return ref V1;
+                case 0x2:
+                    return ref V2;
+                case 0x3:
+                    return ref V3;
+                case 0x4:
+                    return ref V4;
+                case 0x5:
+                    return ref V5;
+                case 0x6:
+                    return ref V6;
+                case 0x7:
+                    return ref V7;
+                case 0x8:
+                    return ref V8;
+                case 0x9:
+                    return ref V9;
+                case 0xA:
+                    return ref VA;
+                case 0xB:
+                    return ref VB;
+                case 0xC:
+                    return ref VC;
+                case 0xD:
+                    return ref VD;
+                case 0xE:
+                    return ref VE;
+                case 0xF:
+                    return ref VF;
+                default:
+                    return ref V0;
+            }
+        }
     }
 }

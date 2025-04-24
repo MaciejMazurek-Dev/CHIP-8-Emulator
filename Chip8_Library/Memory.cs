@@ -31,12 +31,12 @@
             _memory[address] = value;
         }
 
-        public void PushStack(ushort address, ushort value)
+        public void SetWord(ushort address, ushort value)
         {
             _stack[address] = value;
         }
 
-        public ushort PopStack(ushort address)
+        public ushort GetWord(ushort address)
         {
             return _stack[address];
         }
