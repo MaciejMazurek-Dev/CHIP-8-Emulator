@@ -19,7 +19,11 @@
         public void Run()
         {
             _cpu = new(_memory, _display);
-            _cpu.Tick();
+            while(true)
+            {
+                _cpu.Tick();
+
+            }
         }
     }
 }
