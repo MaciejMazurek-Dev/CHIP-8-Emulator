@@ -1,6 +1,4 @@
-﻿using System.Runtime.Versioning;
-
-namespace Chip8_Library
+﻿namespace Chip8_Library
 {
     internal class Cpu
     {
@@ -230,6 +228,23 @@ namespace Chip8_Library
                             registerX = (byte)(registerX << 1);
                             break;
                     }
+                    break;
+                //9XY0 - The values of registers X and Y are compared, and if they are not equal, the program counter is increased by 1.
+                case 0x9000:
+                    registerX = ref GetRegister((byte)(IR & 0x0F00));
+                    registerY = ref GetRegister((byte)(IR & 0x00F0));
+                    if(registerX != registerY)
+                    {
+                        PC++;
+                    }
+                    break;
+                //ANNN - Sets register I to NNN
+                case 0xA000:
+                    I = (byte)(IR & 0x0FFF);
+                    break;
+                //BNNN - Jumps to the address NNN plus value in register V0
+                case 0xB000:
+                    PC = (ushort)((IR & 0x0FFF) + V0);
                     break;
             }
 
