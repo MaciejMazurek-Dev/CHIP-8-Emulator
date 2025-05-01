@@ -8,18 +8,33 @@
 
         public Display()
         {
-            _screen = new bool[height, width];
+            _screen = new bool[width, height];
             ClearScreen();
         }
         public void ClearScreen()
         {
-            for (int h = 0; h < height; h++)
+            for (int y = 0; y < height; y++)
             {
-                for (int w = 0; w < width; w++)
+                for (int x = 0; x < width; x++)
                 {
-                    _screen[h, w] = false;
+                    _screen[x, y] = false;
                 }
             }
+        }
+        public bool DrawPixels(ushort xRegsiter, ushort yRegister, byte pixelsState)
+        {
+            bool pixelState = false;
+            bool result = true;
+            for(byte x = 0; x < 8; x++)
+            {
+                if(((pixelsState & x) > 0) & _screen[xRegsiter + x, yRegister])
+                {
+                    pixelState = false;
+                    result = true;
+                }
+                _screen[xRegsiter + x, yRegister] = pixelState;
+            }
+            return result;
         }
     }
 }

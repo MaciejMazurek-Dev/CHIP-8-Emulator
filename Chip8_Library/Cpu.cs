@@ -246,6 +246,29 @@
                 case 0xB000:
                     PC = (ushort)((IR & 0x0FFF) + V0);
                     break;
+                //CXNN - Sets register X to the result of a bitwise AND operation on a random number (0 to 255) and NN.
+                case 0xC000:
+                    Random random = new();
+                    int randomNumber = random.Next(0, 255);
+                    registerX = ref GetRegister((byte)(IR & 0x0F00));
+                    registerX = (byte)((IR & 0x00FF) & randomNumber);
+                    break;
+                //DXYN - Display N-byte sprite starting at memory location I at (X, Y), set VF = collision.
+                case 0xD000:
+                    registerX = ref GetRegister((byte)(IR & 0x0F00));
+                    registerY = ref GetRegister((byte)(IR & 0x00F0));
+                    byte n = (byte)(IR & 0x000F);
+                    VF = 0;
+                    for(ushort y = 0; y <= n; y++)
+                    {
+                        bool anyPixelErased = _displayBus.DrawPixels(registerX, y, n);
+                        if (anyPixelErased)
+                        {
+                            VF = 1;
+                        }
+                    }
+                    break;
+
             }
 
         }
