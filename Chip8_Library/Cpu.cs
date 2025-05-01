@@ -37,12 +37,15 @@
 
         private Memory _memoryBus;
         private Display _displayBus;
+        private Keyboard _keyboardBus;
+        private Timers _timers;
 
-
-        public Cpu(Memory memoryBus, Display display)
+        public Cpu(Memory memoryBus, Display display, Keyboard keyboard, Timers timers)
         {
             _memoryBus = memoryBus;
             _displayBus = display;
+            _keyboardBus = keyboard;
+            _timers = timers;
 
             PC = 512; //0x200
             SP = 4000;//0xFA0 
@@ -93,7 +96,7 @@
                 case 0x3000:
                     byte value = (byte)(IR & 0x00FF);
                     registerX = ref GetRegister((byte)(IR & 0x0F00));
-                    if(registerX == value)
+                    if (registerX == value)
                     {
                         PC++;
                     }
@@ -102,7 +105,7 @@
                 case 0x4000:
                     value = (byte)(IR & 0x00FF);
                     registerX = ref GetRegister((byte)(IR & 0x0F00));
-                    if( registerX != value)
+                    if (registerX != value)
                     {
                         PC++;
                     }
@@ -111,7 +114,7 @@
                 case 0x5000:
                     registerX = ref GetRegister((byte)(IR & 0x0F00));
                     registerY = ref GetRegister((byte)(IR & 0x00F0));
-                    if(registerX == registerY)
+                    if (registerX == registerY)
                     {
                         PC++;
                     }
@@ -129,7 +132,7 @@
                     registerX = (byte)(registerX + value);
                     break;
                 case 0x8000:
-                    switch(IR & 0x000F)
+                    switch (IR & 0x000F)
                     {
                         //8XY0 - Sets register X to the value from register Y
                         case 0x0000:
@@ -163,7 +166,7 @@
                             {
                                 registerX = checked((byte)(registerX + registerY));
                             }
-                            catch(OverflowException ex)
+                            catch (OverflowException ex)
                             {
                                 registerX = (byte)(registerX + registerY);
                                 VF = 1;
@@ -204,7 +207,7 @@
                         case 0x0007:
                             registerX = ref GetRegister((byte)(IR & 0x0F00));
                             registerY = ref GetRegister((byte)(IR & 0x00F0));
-                            if(registerY > registerX)
+                            if (registerY > registerX)
                             {
                                 VF = 0;
                             }
@@ -217,7 +220,7 @@
                         //8XYE - Shifts bits in register X to the left by 1, then sets VF to 1 if the most significant bit of register X prior to that shift was set, or to 0 if it was unset.
                         case 0x000E:
                             registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            if((registerX & 0b1000_0000) == 1)
+                            if ((registerX & 0b1000_0000) == 1)
                             {
                                 VF = 1;
                             }
@@ -233,7 +236,7 @@
                 case 0x9000:
                     registerX = ref GetRegister((byte)(IR & 0x0F00));
                     registerY = ref GetRegister((byte)(IR & 0x00F0));
-                    if(registerX != registerY)
+                    if (registerX != registerY)
                     {
                         PC++;
                     }
@@ -259,7 +262,7 @@
                     registerY = ref GetRegister((byte)(IR & 0x00F0));
                     byte n = (byte)(IR & 0x000F);
                     VF = 0;
-                    for(ushort y = 0; y <= n; y++)
+                    for (ushort y = 0; y <= n; y++)
                     {
                         bool anyPixelErased = _displayBus.DrawPixels(registerX, y, n);
                         if (anyPixelErased)
@@ -268,14 +271,68 @@
                         }
                     }
                     break;
-
+                case 0xE000:
+                    {
+                        switch (IR & 0x00F0)
+                        {
+                            //EX9E - Skips the next instruction if the key stored in register X is pressed
+                            case 0x0090:
+                                registerX = ref GetRegister((byte)(IR & 0x0F00));
+                                if (_keyboardBus.key[registerX] == true)
+                                {
+                                    PC++;
+                                }
+                                break;
+                            //EXA1 - Skips the next instruction if the key stored in register X is not pressed
+                            case 0x00A0:
+                                registerX = ref GetRegister((byte)(IR & 0x0F00));
+                                if (_keyboardBus.key[registerX] == false)
+                                {
+                                    PC++;
+                                }
+                                break;
+                        }
+                    }
+                    break;
+                case 0xF000:
+                    {
+                        switch(IR & 0x00FF)
+                        {
+                            //FX07 - Sets register X to the value of the delay timer
+                            case 0x0007:
+                                registerX = ref GetRegister((byte)(IR & 0x0F00));
+                                registerX = _timers.delayTime;
+                                break;
+                            //FX0A - A key press is awaited, and then stored in register X 
+                            case 0x000A:
+                                registerX = ref GetRegister((byte)(IR & 0x0F00));
+                                registerX = _keyboardBus.GetKey();
+                                break;
+                            //FX15 - Sets the delay timer to register X
+                            case 0x0015:
+                                registerX = ref GetRegister((byte)(IR & 0x0F00));
+                                _timers.SetDelayTimer(registerX);
+                                break;
+                            //FX18 - Sets the sound timer to register X
+                            case 0x0018:
+                                registerX = ref GetRegister((byte)(IR & 0x0F00));
+                                _timers.SetSoundTimer(registerX);
+                                break;
+                            //FX1E - Adds register X to register I
+                            case 0x001E:
+                                registerX = ref GetRegister((byte)(IR & 0x0F00));
+                                I += registerX;
+                                break;
+                        }
+                    }
+                    break;
             }
 
         }
 
         private ushort StackPOP()
         {
-            ushort result =  _memoryBus.GetWord(SP);
+            ushort result = _memoryBus.GetWord(SP);
             SP -= 2;
             return result;
         }
@@ -286,7 +343,7 @@
         }
         private ref byte GetRegister(byte register)
         {
-            switch(register)
+            switch (register)
             {
                 case 0x0:
                     return ref V0;
