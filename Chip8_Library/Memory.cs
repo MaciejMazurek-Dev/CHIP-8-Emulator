@@ -3,6 +3,7 @@
     internal class Memory
     {
         private const ushort programStartAddress = 512;
+        private const ushort fontsStartAddress = 80;
         private const ushort memorySize = 4096;
         private const ushort stackSize = 16;
         private byte[] _memory = new byte[memorySize];
@@ -19,6 +20,14 @@
                 _memory[programStartAddress + i] = data[i];
             }
             return true;
+        }
+
+        public void LoadFonts(byte[] fonts)
+        {
+            for(int i = 0; i < fonts.Length; i++)
+            {
+                _memory[fontsStartAddress + i] = fonts[i];
+            }
         }
 
         public byte GetByte(ushort address)

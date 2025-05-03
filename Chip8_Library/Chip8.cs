@@ -13,6 +13,7 @@
         {
             _memory = new();
             _display = new();
+            _memory.LoadFonts(Font.fonts);
         }
         public bool Load(byte[] data)
         {

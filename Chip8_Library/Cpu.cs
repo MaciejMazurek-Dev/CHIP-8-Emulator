@@ -323,6 +323,7 @@
                                 registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 I += registerX;
                                 break;
+                                //FX29 - 
                         }
                     }
                     break;
