@@ -3,36 +3,36 @@
     internal class Cpu
     {
         //Data Registers 8-bit
-        private byte V0;
-        private byte V1;
-        private byte V2;
-        private byte V3;
-        private byte V4;
-        private byte V5;
-        private byte V6;
-        private byte V7;
-        private byte V8;
-        private byte V9;
-        private byte VA;
-        private byte VB;
-        private byte VC;
-        private byte VD;
-        private byte VE;
+        internal byte V0;
+        internal byte V1;
+        internal byte V2;
+        internal byte V3;
+        internal byte V4;
+        internal byte V5;
+        internal byte V6;
+        internal byte V7;
+        internal byte V8;
+        internal byte V9;
+        internal byte VA;
+        internal byte VB;
+        internal byte VC;
+        internal byte VD;
+        internal byte VE;
 
         //FLAGS Register 8-bit 
-        private byte VF;
+        internal byte VF;
 
         //Address Register 16-bit
-        private ushort I;
+        internal ushort I;
 
         //Program Counter 16-bit
-        private ushort PC;
+        internal ushort PC;
 
         //Stack Pointer 16-bit
-        private ushort SP;
+        internal ushort SP;
 
         //Instruction Register 16-bit
-        private ushort IR;
+        internal ushort IR;
 
 
         private Memory _memoryBus;
@@ -58,16 +58,22 @@
 
         private void Fetch()
         {
-            IR = (ushort)(_memoryBus.GetByte(PC) << 8);
-            PC++;
-            IR = (ushort)(IR & 0xFF00 | _memoryBus.GetByte(PC));
-            PC++;
+            if(PC < 0x1000)
+            {
+                IR = (ushort)(((_memoryBus.GetByte(PC) << 8)));
+                PC++;
+                IR = (ushort)(IR & 0xFF00 | _memoryBus.GetByte(PC));
+                PC++;
+            }
+            else
+            {
+                PC = 512;
+            }
         }
-
         private void DecodeAndExecute()
         {
-            ref byte registerX = ref V0;
-            ref byte registerY = ref V0;
+            ref byte registerX = ref GetRegister((byte)((IR & 0x0F00) >> 8));
+            ref byte registerY = ref GetRegister((byte)((IR & 0x00F0) >> 4));
             switch (IR & 0xF000)
             {
                 case 0x0000:
@@ -95,7 +101,6 @@
                 //3XNN - Skip next instruction if register X equals NN
                 case 0x3000:
                     byte value = (byte)(IR & 0x00FF);
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
                     if (registerX == value)
                     {
                         PC++;
@@ -104,7 +109,6 @@
                 //4XNN - Skip next instruction if register X does not equal NN
                 case 0x4000:
                     value = (byte)(IR & 0x00FF);
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
                     if (registerX != value)
                     {
                         PC++;
@@ -112,8 +116,6 @@
                     break;
                 //5XY0 - Skip next instruction if register X equals register Y
                 case 0x5000:
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
-                    registerY = ref GetRegister((byte)(IR & 0x00F0));
                     if (registerX == registerY)
                     {
                         PC++;
@@ -121,13 +123,12 @@
                     break;
                 //6XNN - Sets register X to NN
                 case 0x6000:
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
+                    byte registerNumber = (byte)((IR & 0x0F00) >> 8);
                     value = (byte)(IR & 0x00FF);
                     registerX = value;
                     break;
                 //7XNN - Adds NN to register X 
                 case 0x7000:
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
                     value = (byte)(IR & 0x00FF);
                     registerX = (byte)(registerX + value);
                     break;
@@ -136,32 +137,22 @@
                     {
                         //8XY0 - Sets register X to the value from register Y
                         case 0x0000:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            registerY = ref GetRegister((byte)(IR & 0x00F0));
                             registerX = registerY;
                             break;
                         //8XY1 - Performs a bitwise OR on the values of registers X and Y, then stores the result in register X.
                         case 0x0001:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            registerY = ref GetRegister((byte)(IR & 0x00F0));
                             registerX = (byte)(registerX | registerY);
                             break;
                         //8XY2 - Performs a bitwise AND on the values of registers X and Y, then stores the result in register X.
                         case 0x0002:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            registerY = ref GetRegister((byte)(IR & 0x00F0));
                             registerX = (byte)(registerX & registerY);
                             break;
                         //8XY3 - Performs a bitwise XOR on the values of registers X and Y, then stores the result in register X.
                         case 0x0003:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            registerY = ref GetRegister((byte)(IR & 0x00F0));
                             registerX = (byte)(registerX ^ registerY);
                             break;
                         //8XY4 - Adds register X to register Y. FLAGS register VF is set to 1 when there's an overflow, and to 0 when there is not. Only the lowest 8 bits of the result are kept, and stored in register X.
                         case 0x0004:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            registerY = ref GetRegister((byte)(IR & 0x00F0));
                             try
                             {
                                 registerX = checked((byte)(registerX + registerY));
@@ -176,8 +167,6 @@
                             break;
                         //8XY5 - Value in register Y is subtracted from value in register X. FLAGS register VF is set to 0 when there's an underflow, and 1 when there is not.
                         case 0x0005:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            registerY = ref GetRegister((byte)(IR & 0x00F0));
                             try
                             {
                                 registerX = checked((byte)(registerX - registerY));
@@ -192,7 +181,6 @@
                             break;
                         //8XY6 - Shifts bits in register X to the right by 1. If the least-significant bit of register X is 1, then FLAGS register VF is set to 1, otherwise 0.
                         case 0x0006:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
                             if ((registerX & 0b0000_0001) == 1)
                             {
                                 VF = 1;
@@ -205,8 +193,6 @@
                             break;
                         //8XY7 - Sets register X to register Y minus register X. FLAGS register VF is set to 0 when there's an underflow, and 1 when there is not.
                         case 0x0007:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
-                            registerY = ref GetRegister((byte)(IR & 0x00F0));
                             if (registerY > registerX)
                             {
                                 VF = 0;
@@ -219,7 +205,6 @@
                             break;
                         //8XYE - Shifts bits in register X to the left by 1, then sets VF to 1 if the most significant bit of register X prior to that shift was set, or to 0 if it was unset.
                         case 0x000E:
-                            registerX = ref GetRegister((byte)(IR & 0x0F00));
                             if ((registerX & 0b1000_0000) == 1)
                             {
                                 VF = 1;
@@ -234,8 +219,6 @@
                     break;
                 //9XY0 - The values of registers X and Y are compared, and if they are not equal, the program counter is increased by 1.
                 case 0x9000:
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
-                    registerY = ref GetRegister((byte)(IR & 0x00F0));
                     if (registerX != registerY)
                     {
                         PC++;
@@ -243,7 +226,7 @@
                     break;
                 //ANNN - Sets register I to NNN
                 case 0xA000:
-                    I = (byte)(IR & 0x0FFF);
+                    I = (ushort)(IR & 0x0FFF);
                     break;
                 //BNNN - Jumps to the address NNN plus value in register V0
                 case 0xB000:
@@ -253,19 +236,17 @@
                 case 0xC000:
                     Random random = new();
                     int randomNumber = random.Next(0, 255);
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
                     registerX = (byte)((IR & 0x00FF) & randomNumber);
                     break;
                 //DXYN - Display N-byte sprite starting at memory location I at (X, Y), set VF = collision.
                 case 0xD000:
-                    registerX = ref GetRegister((byte)(IR & 0x0F00));
-                    registerY = ref GetRegister((byte)(IR & 0x00F0));
-                    byte n = (byte)(IR & 0x000F);
+                    byte spriteLength = (byte)(IR & 0x000F);
                     VF = 0;
-                    for (ushort y = 0; y <= n; y++)
+                    for(ushort y = 0; y < spriteLength; y++)
                     {
-                        bool anyPixelErased = _displayBus.DrawPixels(registerX, y, n);
-                        if (anyPixelErased)
+                        byte spriteBatch = _memoryBus.GetByte((ushort)(I + y));
+                        bool pixelChange = _displayBus.DrawSpriteBatch(registerX, (ushort)(registerY + y), spriteBatch);
+                        if(pixelChange)
                         {
                             VF = 1;
                         }
@@ -277,7 +258,6 @@
                         {
                             //EX9E - Skips the next instruction if the key stored in register X is pressed
                             case 0x0090:
-                                registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 if (_keyboardBus.key[registerX] == true)
                                 {
                                     PC++;
@@ -285,7 +265,6 @@
                                 break;
                             //EXA1 - Skips the next instruction if the key stored in register X is not pressed
                             case 0x00A0:
-                                registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 if (_keyboardBus.key[registerX] == false)
                                 {
                                     PC++;
@@ -300,37 +279,29 @@
                         {
                             //FX07 - Sets register X to the value of the delay timer
                             case 0x0007:
-                                registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 registerX = _timers.delayTime;
                                 break;
                             //FX0A - A key press is awaited, and then stored in register X 
                             case 0x000A:
-                                registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 registerX = _keyboardBus.GetKey();
                                 break;
                             //FX15 - Sets the delay timer to register X
                             case 0x0015:
-                                registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 _timers.SetDelayTimer(registerX);
                                 break;
                             //FX18 - Sets the sound timer to register X
                             case 0x0018:
-                                registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 _timers.SetSoundTimer(registerX);
                                 break;
                             //FX1E - Adds register X to register I
                             case 0x001E:
-                                registerX = ref GetRegister((byte)(IR & 0x0F00));
                                 I += registerX;
                                 break;
-                                //FX29 - 
                         }
                     }
                     break;
             }
-
         }
-
         private ushort StackPOP()
         {
             ushort result = _memoryBus.GetWord(SP);

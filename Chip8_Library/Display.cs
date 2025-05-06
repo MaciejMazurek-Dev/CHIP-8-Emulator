@@ -4,12 +4,11 @@
     {
         private const ushort width = 64;
         private const ushort height = 32;
-        private bool[,] _screen;
+        internal bool[,] _screen;
 
         public Display()
         {
             _screen = new bool[width, height];
-            ClearScreen();
         }
         public void ClearScreen()
         {
@@ -21,20 +20,20 @@
                 }
             }
         }
-        public bool DrawPixels(ushort xRegsiter, ushort yRegister, byte pixelsState)
+        public bool DrawSpriteBatch(ushort xRegsiter, ushort yRegister, byte spriteBatch)
         {
-            bool pixelState = false;
-            bool result = true;
-            for(byte x = 0; x < 8; x++)
+            bool pixelChange = false;
+            for(byte x = 0; x < 8;x++)
             {
-                if(((pixelsState & x) > 0) & _screen[xRegsiter + x, yRegister])
+                byte bytePixel = (byte)(spriteBatch & (0b_1000_0000 >>> x));
+                bool pixel = ( bytePixel > 0);
+                if(_screen[xRegsiter + x, yRegister] ^ pixel)
                 {
-                    pixelState = false;
-                    result = true;
+                    _screen[xRegsiter + x, yRegister] = pixel;
+                    pixelChange = true;
                 }
-                _screen[xRegsiter + x, yRegister] = pixelState;
             }
-            return result;
+            return pixelChange;
         }
     }
 }
