@@ -49,5 +49,13 @@
         {
             return _stack[address];
         }
+        public ushort StackPOP(ushort address)
+        {
+            return _stack[address];
+        }
+        public void StackPUSH(ushort address, ushort value)
+        {
+            _stack[address] = value;
+        }
     }
 }

@@ -48,7 +48,7 @@
             _timers = timers;
 
             PC = 512; //0x200
-            SP = 4000;//0xFA0 
+            SP = 0; 
         }
         public void Tick()
         {
@@ -58,17 +58,10 @@
 
         private void Fetch()
         {
-            if(PC < 0x1000)
-            {
                 IR = (ushort)(((_memoryBus.GetByte(PC) << 8)));
                 PC++;
                 IR = (ushort)(IR & 0xFF00 | _memoryBus.GetByte(PC));
                 PC++;
-            }
-            else
-            {
-                PC = 512;
-            }
         }
         private void DecodeAndExecute()
         {
@@ -85,7 +78,8 @@
                             break;
                         //00EE - RET - Return from a subroutine
                         case 0x00EE:
-                            PC = StackPOP();
+                            SP--;
+                            PC = _memoryBus.StackPOP(SP);
                             break;
                     }
                     break;
@@ -95,7 +89,7 @@
                     break;
                 //2NNN - Call subroutine at address NNN
                 case 0x2000:
-                    StackPUSH(PC);
+                    _memoryBus.StackPUSH(SP, PC);
                     PC = (ushort)(IR & 0x0FFF);
                     break;
                 //3XNN - Skip next instruction if register X equals NN
@@ -302,17 +296,7 @@
                     break;
             }
         }
-        private ushort StackPOP()
-        {
-            ushort result = _memoryBus.GetWord(SP);
-            SP -= 2;
-            return result;
-        }
-        private void StackPUSH(ushort value)
-        {
-            _memoryBus.SetWord(SP, value);
-            SP += 2;
-        }
+        
         private ref byte GetRegister(byte register)
         {
             switch (register)

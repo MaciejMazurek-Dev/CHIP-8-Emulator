@@ -2,32 +2,32 @@
 {
     public class Chip8
     {
-        private readonly Memory _memory;
+        internal readonly Memory memory;
         internal Cpu cpu;
-        private readonly Display _display;
-        private Keyboard _keyboard;
+        internal readonly Display display;
+        internal Keyboard keyboard;
         private Timers _timers;
         public bool[,] Screen
         {
             get
             {
-                return _display._screen;
+                return display.screen;
             }
         }
         
         public Chip8()
         {
-            _memory = new();
-            _display = new();
-            _keyboard = new();
+            memory = new();
+            display = new();
+            keyboard = new();
             _timers = new();
-            _memory.LoadFonts(Font.fonts);
+            memory.LoadFonts(Font.fonts);
 
-            cpu = new(_memory, _display, _keyboard, _timers);
+            cpu = new(memory, display, keyboard, _timers);
         }
         public bool Load(byte[] data)
         {
-            return _memory.Load(data);
+            return memory.Load(data);
         }
         public void Run()
         {

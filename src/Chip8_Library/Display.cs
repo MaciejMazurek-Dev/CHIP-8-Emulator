@@ -4,11 +4,11 @@
     {
         private const ushort width = 64;
         private const ushort height = 32;
-        internal bool[,] _screen;
+        internal bool[,] screen;
 
         public Display()
         {
-            _screen = new bool[width, height];
+            screen = new bool[width, height];
         }
         public void ClearScreen()
         {
@@ -16,7 +16,7 @@
             {
                 for (int x = 0; x < width; x++)
                 {
-                    _screen[x, y] = false;
+                    screen[x, y] = false;
                 }
             }
         }
@@ -27,9 +27,9 @@
             {
                 byte bytePixel = (byte)(spriteBatch & (0b_1000_0000 >>> x));
                 bool pixel = ( bytePixel > 0);
-                if(_screen[xRegsiter + x, yRegister] ^ pixel)
+                if(screen[xRegsiter + x, yRegister] ^ pixel)
                 {
-                    _screen[xRegsiter + x, yRegister] = pixel;
+                    screen[xRegsiter + x, yRegister] = pixel;
                     pixelChange = true;
                 }
             }
