@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Chip8_Library\Chip8_Library.csproj" />
+    <ProjectReference Include="..\..\src\Chip8_Library\Chip8_Library.csproj" />
   </ItemGroup>
 
   <ItemGroup>

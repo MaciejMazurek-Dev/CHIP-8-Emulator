@@ -6,4 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include ="Chip8_Library_Test_Unit"/>
+  </ItemGroup>
 </Project>
