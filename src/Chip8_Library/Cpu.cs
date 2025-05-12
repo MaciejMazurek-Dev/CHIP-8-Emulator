@@ -98,6 +98,7 @@
                     if (registerX == value)
                     {
                         PC++;
+                        PC++;
                     }
                     break;
                 //4XNN - Skip next instruction if register X does not equal NN
