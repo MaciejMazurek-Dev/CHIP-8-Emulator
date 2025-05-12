@@ -107,12 +107,14 @@
                     if (registerX != value)
                     {
                         PC++;
+                        PC++;
                     }
                     break;
                 //5XY0 - Skip next instruction if register X equals register Y
                 case 0x5000:
                     if (registerX == registerY)
                     {
+                        PC++;
                         PC++;
                     }
                     break;

@@ -75,7 +75,6 @@ namespace Chip8_Library_Test_Unit
         public void ExecuteInstruction_2NNN_CallSubroutineAtNNN()
         {
             //Arrange
-            _sut.cpu.PC = 0x0007;
             _sut.Load(new byte[]
             {
                 0x20,
@@ -87,7 +86,7 @@ namespace Chip8_Library_Test_Unit
             ushort registerPC = _sut.cpu.PC;
 
             //Assert
-            registerPC.Should().Be(0x44);
+            registerPC.Should().Be(0x044);
         }
         [Fact]
         public void ExecuteInstruction_3XNN_SkipNextInstructionIfRegisterXEqualsNN()
@@ -107,6 +106,85 @@ namespace Chip8_Library_Test_Unit
             //Assert
             ushort expected = (ushort)(snapshotRegisterPC + 4);
             registerPC.Should().Be(expected);
+        }
+        [Fact]
+        public void ExecuteInstruction_4XNN_SkipNextInstructionIfRegisterXNotEqualNN()
+        {
+            //Arrange
+            ushort snapshotRegisterPC = _sut.cpu.PC;
+            _sut.cpu.V2 = 0xAB;
+            _sut.Load(new byte[]
+            {
+                0x42,
+                0x4C
+            });
+            _sut.Run();
+
+            //Act
+            ushort registerPC = _sut.cpu.PC;
+
+            //Assert
+            ushort expected = (ushort)(snapshotRegisterPC + 4);
+            registerPC.Should().Be(expected);
+
+
+        }
+        [Fact]
+        public void ExecuteInstruction_5XY0_SkipNextInstructionIfRegisterXEqualsRegisterY()
+        {
+            //Arrange
+            ushort snapshotRegisterPC = _sut.cpu.PC;
+            _sut.Load(new byte[]
+            {
+                0x51,
+                0x10
+            });
+            _sut.Run();
+
+            //Act
+            ushort registerPC = _sut.cpu.PC;
+
+            //Assert
+            ushort expected = (ushort)(snapshotRegisterPC + 4);
+            registerPC.Should().Be(expected);
+        }
+        [Fact]
+        public void ExecuteInstruction_6XNN_SetRegisterXToNN()
+        {
+            //Arrange
+            byte nnValue = 0xBB;
+            _sut.Load(new byte[]
+            {
+                0x6A,
+                nnValue
+            });
+            _sut.Run();
+
+            //Act
+            ushort registerX = _sut.cpu.VA;
+
+            //Assert
+            registerX.Should().Be(nnValue);
+        }
+        [Fact]
+        public void ExecuteInstruction_7XNN_AddNNToRegisterX()
+        {
+            //Arrange
+            byte nnValue = 0x1A;
+            byte registerValue = 0x15;
+            _sut.cpu.V2 = registerValue;
+            _sut.Load(new byte[]
+            {
+                0x72,
+                nnValue
+            });
+            _sut.Run();
+
+            //Act
+            ushort registerX = _sut.cpu.V2;
+
+            //Assert
+            registerX.Should().Be((byte)(registerValue + nnValue));
         }
     }
 }
