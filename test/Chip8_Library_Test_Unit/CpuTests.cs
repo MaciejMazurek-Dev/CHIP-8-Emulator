@@ -1,6 +1,7 @@
 ﻿using Chip8_Library;
 using Xunit;
 using FluentAssertions;
+using Microsoft.Win32;
 
 namespace Chip8_Library_Test_Unit
 {
@@ -161,7 +162,7 @@ namespace Chip8_Library_Test_Unit
             _sut.Run();
 
             //Act
-            ushort registerX = _sut.cpu.VA;
+            byte registerX = _sut.cpu.VA;
 
             //Assert
             registerX.Should().Be(nnValue);
@@ -181,10 +182,52 @@ namespace Chip8_Library_Test_Unit
             _sut.Run();
 
             //Act
-            ushort registerX = _sut.cpu.V2;
+            byte registerX = _sut.cpu.V2;
 
             //Assert
             registerX.Should().Be((byte)(registerValue + nnValue));
+        }
+        [Fact]
+        public void ExecuteInstruction_8XY0_SetRegisterXToTheValueOfRegisterY()
+        {
+            //Arrage 
+            byte registerXValue = 0xEA;
+            byte registerYValue = 0x04;
+            _sut.cpu.V0 = registerXValue;
+            _sut.cpu.V2 = registerYValue;
+            _sut.Load(new byte[]
+            {
+                0x80,
+                0x20
+            });
+            _sut.Run();
+
+            //Act
+            byte expected = _sut.cpu.V0;
+
+            //Assert
+            expected.Should().Be(registerYValue);
+        }
+        [Fact]
+        public void ExecuteInstruction_8XY1_PerformBitwiseOROnRegisterXAndYAndStoresResultInRegisterX()
+        {
+            //Arrange
+            byte registerXValue = 0x55;
+            byte registerYValue = 0xAA;
+            _sut.cpu.V0 = registerXValue;
+            _sut.cpu.V2 = registerYValue;
+            _sut.Load(new byte[]
+            {
+                0x80,
+                0x21
+            });
+            _sut.Run();
+
+            //Act
+            byte expected = _sut.cpu.V0;
+
+            //Assert
+            expected.Should().Be(((byte)(registerXValue | registerYValue)));
         }
     }
 }
