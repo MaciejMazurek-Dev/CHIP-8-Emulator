@@ -178,7 +178,7 @@
                             break;
                         //8XY6 - Shifts bits in register X to the right by 1. If the least-significant bit of register X is 1, then FLAGS register VF is set to 1, otherwise 0.
                         case 0x0006:
-                            if ((registerX & 0b0000_0001) == 1)
+                            if ((registerX & 0b_0000_0001) == 0b_0000_0001)
                             {
                                 VF = 1;
                             }
@@ -190,19 +190,21 @@
                             break;
                         //8XY7 - Sets register X to register Y minus register X. FLAGS register VF is set to 0 when there's an underflow, and 1 when there is not.
                         case 0x0007:
-                            if (registerY > registerX)
+                            try
                             {
+                                registerX = checked((byte)(registerY - registerX));
+                            }
+                            catch (OverflowException ex)
+                            {
+                                registerX = (byte)(registerY - registerX);
                                 VF = 0;
+                                break;
                             }
-                            else
-                            {
-                                VF = 1;
-                            }
-                            registerX = (byte)(registerY - registerX);
+                            VF = 1;
                             break;
                         //8XYE - Shifts bits in register X to the left by 1, then sets VF to 1 if the most significant bit of register X prior to that shift was set, or to 0 if it was unset.
                         case 0x000E:
-                            if ((registerX & 0b1000_0000) == 1)
+                            if ((registerX & 0b_1000_0000) == 0b_1000_0000)
                             {
                                 VF = 1;
                             }
@@ -218,6 +220,7 @@
                 case 0x9000:
                     if (registerX != registerY)
                     {
+                        PC++;
                         PC++;
                     }
                     break;
