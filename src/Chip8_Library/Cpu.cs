@@ -90,6 +90,7 @@
                 //2NNN - Call subroutine at address NNN
                 case 0x2000:
                     _memoryBus.StackPUSH(SP, PC);
+                    SP++;
                     PC = (ushort)(IR & 0x0FFF);
                     break;
                 //3XNN - Skip next instruction if register X equals NN
@@ -240,17 +241,8 @@
                     break;
                 //DXYN - Display N-byte sprite starting at memory location I at (X, Y), set VF = collision.
                 case 0xD000:
-                    byte spriteLength = (byte)(IR & 0x000F);
-                    VF = 0;
-                    for(ushort y = 0; y < spriteLength; y++)
-                    {
-                        byte spriteBatch = _memoryBus.GetByte((ushort)(I + y));
-                        bool pixelChange = _displayBus.DrawSpriteBatch(registerX, (ushort)(registerY + y), spriteBatch);
-                        if(pixelChange)
-                        {
-                            VF = 1;
-                        }
-                    }
+                    byte nValue =(byte)(IR & 0x000F);
+                    _displayBus.DrawSprite(registerX, registerY, I, nValue);
                     break;
                 case 0xE000:
                     {
@@ -261,12 +253,14 @@
                                 if (_keyboardBus.key[registerX] == true)
                                 {
                                     PC++;
+                                    PC++;
                                 }
                                 break;
                             //EXA1 - Skips the next instruction if the key stored in register X is not pressed
                             case 0x00A0:
                                 if (_keyboardBus.key[registerX] == false)
                                 {
+                                    PC++;
                                     PC++;
                                 }
                                 break;

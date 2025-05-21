@@ -1,10 +1,6 @@
 ﻿using Chip8_Library;
-using Xunit;
 using FluentAssertions;
-using Microsoft.Win32;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using System.Net;
-using System;
+using System.Collections;
 
 namespace Chip8_Library_Test_Unit
 {
@@ -630,6 +626,157 @@ namespace Chip8_Library_Test_Unit
         }
 
 
+        //TODO Write test for CPU instruction DXYN
 
+
+        [Theory]
+        [ClassData(typeof(PressedKeyTestData))]
+        public void ExecuteInstruction_EX9E_SkipNextInstructionIfKeyWithValueOfRegisterXIsPressed(byte key)
+        {
+            //Arrange
+            ushort registerPC = _sut.cpu.PC;
+            _sut.keyboard.key[key] = true;
+            _sut.cpu.V3 = key;
+            _sut.Load(new byte[]
+            {
+                0xE3,
+                0x9E
+            });
+            _sut.Run();
+
+            //Act
+            ushort expected = _sut.cpu.PC;
+
+            //Assert
+            expected.Should().Be((ushort)(registerPC + 0x04));
+        }
+        [Theory]
+        [ClassData(typeof(PressedKeyTestData))]
+        public void ExecuteInstruction_EXA1_SkipNextInstructionIfKeyWithValueOfRegisterXIsNotPressed(byte key)
+        {
+            //Arrange
+            ushort registerPC = _sut.cpu.PC;
+            _sut.keyboard.key[key] = true;
+            _sut.cpu.V3 = key;
+            _sut.Load(new byte[]
+            {
+                0xE3,
+                0xA1
+            });
+            _sut.Run();
+
+            //Act
+            ushort expected = _sut.cpu.PC;
+
+            //Assert
+            expected.Should().Be((ushort)(registerPC + 0x02));
+        }
+        [Theory]
+        [InlineData(1)]
+        [InlineData(52)]
+        [InlineData(26)]
+        [InlineData(60)]
+        public void ExecuteInstruction_FX07_SetRegisterXToTheValueOfDelayTimer(byte timeValue)
+        {
+            //Arrange
+            _sut.timers.delayTime = timeValue;
+            _sut.Load(new byte[]
+            {
+                0xF8,
+                0x07
+            });
+            _sut.Run();
+
+            //Act
+            ushort expected = _sut.cpu.V8;
+
+            //Assert
+            expected.Should().Be(timeValue);
+        }
+
+        //TODO Write test for instruction FX0A 
+
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(52)]
+        [InlineData(26)]
+        [InlineData(60)]
+        public void ExecuteInstruction_FX15_SetDelayTimerToTheValueInRegisterX(byte registerValue)
+        {
+            //Arrange
+            _sut.cpu.V8 = registerValue;
+            _sut.Load(new byte[]
+            {
+                0xF8,
+                0x15
+            });
+            _sut.Run();
+
+            //Act
+            ushort expected = _sut.timers.delayTime;
+
+            //Assert
+            expected.Should().Be(registerValue);
+        }
+        [Theory]
+        [InlineData(1)]
+        [InlineData(52)]
+        [InlineData(26)]
+        [InlineData(60)]
+        public void ExecuteInstruction_FX18_SetSoundTimerToTheValueInRegisterX(byte registerValue)
+        {
+            //Arrange
+            _sut.cpu.V8 = registerValue;
+            _sut.Load(new byte[]
+            {
+                0xF8,
+                0x18
+            });
+            _sut.Run();
+
+            //Act
+            ushort expected = _sut.timers.soundTime;
+
+            //Assert
+            expected.Should().Be(registerValue);
+        }
+        [Theory]
+        [InlineData(1, 45)]
+        [InlineData(52, 13)]
+        [InlineData(26, 380)]
+        [InlineData(60, 144)]
+        public void ExecuteInstruction_FX1E_AddValuesOfRegistersXAndIStoreResultInRegisterI(byte registerXValue, ushort registerIValue)
+        {
+            //Arrange
+            _sut.cpu.V8 = registerXValue;
+            _sut.cpu.I = registerIValue;
+            _sut.Load(new byte[]
+            {
+                0xF8,
+                0x1E
+            });
+            _sut.Run();
+
+            //Act
+            ushort expected = _sut.cpu.I;
+
+            //Assert
+            expected.Should().Be((ushort)(registerXValue + registerIValue));
+        }
+    }
+    public class PressedKeyTestData : IEnumerable<object[]>
+    {
+        public IEnumerator<object[]> GetEnumerator()
+        {
+            for(byte i = 0; i <= 0x0F; i++)
+            {
+                yield return new object[] { i };
+            }
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

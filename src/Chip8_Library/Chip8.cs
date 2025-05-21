@@ -6,7 +6,7 @@
         internal Cpu cpu;
         internal readonly Display display;
         internal Keyboard keyboard;
-        private Timers _timers;
+        internal Timers timers;
         public bool[,] Screen
         {
             get
@@ -18,12 +18,12 @@
         public Chip8()
         {
             memory = new();
-            display = new();
+            display = new(memory);
             keyboard = new();
-            _timers = new();
+            timers = new();
             memory.LoadFonts(Font.fonts);
 
-            cpu = new(memory, display, keyboard, _timers);
+            cpu = new(memory, display, keyboard, timers);
         }
         public bool Load(byte[] data)
         {
