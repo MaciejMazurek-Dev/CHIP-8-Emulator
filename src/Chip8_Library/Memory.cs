@@ -57,5 +57,10 @@
         {
             _stack[address] = value;
         }
+        public ushort GetFontAddress(byte font)
+        {
+            byte fontNibble = (byte)(font & 0b_0000_1111);
+            return (ushort)(fontsStartAddress + (fontNibble * 8));
+        }
     }
 }

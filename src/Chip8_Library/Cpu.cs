@@ -299,6 +299,10 @@
                             case 0x001E:
                                 I += registerX;
                                 break;
+                            //FX29 - Sets register I to the location of the sprite for the character in register X.
+                            case 0x0029:
+                                I = _memoryBus.GetFontAddress(registerX);
+                                break;
                         }
                     }
                     break;
