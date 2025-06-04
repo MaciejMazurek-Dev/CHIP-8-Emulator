@@ -27,11 +27,11 @@ namespace Chip8_Library
         public bool DrawSpriteBatch(ushort xRegsiter, ushort yRegister, byte spriteBatch)
         {
             bool pixelChange = false;
-            for(byte x = 0; x < 8;x++)
+            for (byte x = 0; x < 8; x++)
             {
                 byte bytePixel = (byte)(spriteBatch & (0b_1000_0000 >>> x));
-                bool pixel = ( bytePixel > 0);
-                
+                bool pixel = (bytePixel > 0);
+
                 bool currentPixel = screen[xRegsiter + x, yRegister];
 
                 if (currentPixel ^ pixel)
@@ -44,32 +44,72 @@ namespace Chip8_Library
         }
         public bool DrawSprite(ushort xRegister, ushort yRegister, ushort iRegister, byte length)
         {
-                for(ushort y = 0; y < length; y++)
+            bool shouldSetRegisterVF = false;
+            ushort wrappedY = WrapPosition(yRegister, height);
+            ushort wrappedX = WrapPosition(xRegister, width);
+
+            for (ushort y = 0; y < length; y++)
+            {
+                byte spriteByte = _memoryBus.GetByte((ushort)(iRegister + y));
+                ushort positionY = (ushort)(wrappedY + y);
+                for (ushort x = 0; x < 8; x++)
                 {
-                    byte memoryByte = _memoryBus.GetByte((ushort)(iRegister + y));
-                
-                    ushort moduloY = (ushort)(yRegister + y);
-                    if(moduloY >= height)
+                    ushort positionX = (ushort)(wrappedX + x);
+                    bool clipSprite = ClipSprite(positionX, positionY);
+                    if (clipSprite)
                     {
-                        moduloY %= moduloY;
+                        continue;
                     }
-                    for (ushort x = 0; x < 8; x++)
+
+                    bool memoryPixel = GetCurrentPixel(spriteByte, x);
+                    bool screenPixel = screen[positionX, positionY];
+                    bool pixelState = FlipPixel(memoryPixel, screenPixel);
+                    if (pixelState)
                     {
-                        ushort moduloX = (ushort)(xRegister + x);
-                        if(moduloX >= width)
-                        {
-                            moduloX %= width;
-                        }
-                        if((memoryByte & (0b_1000_0000 >>> x)) > 0)
-                        {
-                            screen[moduloX, moduloY] = true;
-                        }
-                        else
-                        {
-                            screen[moduloX, moduloY] = false;
-                        }
+                        screen[positionX, positionY] = !pixelState;
+                        shouldSetRegisterVF = true;
+                    }
+                    else
+                    {
+                        //XOR pixels
+                        screen[positionX, positionY] = memoryPixel ^ screenPixel;
                     }
                 }
+            }
+            return shouldSetRegisterVF;
+        }
+        private ushort WrapPosition(ushort position, ushort divisor)
+        {
+            return (ushort)(position % divisor);
+        }
+        private bool FlipPixel(bool memoryPixel, bool screenPixel)
+        {
+            if (screenPixel == true && memoryPixel == true)
+            {
+                return true;
+            }
+            return false;
+        }
+        private bool GetCurrentPixel(byte spriteByte, ushort offset)
+        {
+            byte pixelPosition = (byte)(0b_1000_0000 >>> offset);
+            byte currentPixel = (byte)(spriteByte & pixelPosition);
+            if(currentPixel > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+        private bool ClipSprite(ushort positionX, ushort positionY)
+        {
+            if(positionX >= width)
+            {
+                return true;
+            }
+            if(positionY >= height)
+            {
+                return true;
+            }
             return false;
         }
     }
