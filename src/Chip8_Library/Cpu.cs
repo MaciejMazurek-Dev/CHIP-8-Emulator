@@ -242,8 +242,16 @@
                 //DXYN - Display N-byte sprite starting at memory location I at (X, Y), set VF = collision.
                 case 0xD000:
                     byte nValue =(byte)(IR & 0x000F);
-                    _displayBus.DrawSprite(registerX, registerY, I, nValue);
-                    break;
+                    bool shouldSetRegisterVF = _displayBus.DrawSprite(registerX, registerY, I, nValue);
+                    if(shouldSetRegisterVF)
+                    {
+                        VF = 1;
+                    }
+                    else
+                    {
+                        VF = 0;
+                    }
+                        break;
                 case 0xE000:
                     {
                         switch (IR & 0x00F0)
