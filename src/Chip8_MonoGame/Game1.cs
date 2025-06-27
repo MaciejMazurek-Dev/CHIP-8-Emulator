@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.IO;
 
 namespace Chip8_MonoGame
@@ -15,7 +16,7 @@ namespace Chip8_MonoGame
         private const int ScreenHeight = 320;
         private const int ScreenWidth = 640;
         private bool[,] _screenFrame;
-        
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -41,16 +42,22 @@ namespace Chip8_MonoGame
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-        }
-
+        
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
+            KeyboardState keyboardState = Keyboard.GetState();
+            if (keyboardState.GetPressedKeyCount() > 0)
+            {
+                Keys[] keys = keyboardState.GetPressedKeys();
+                int keyValue = Convert.ToInt32(keys[0]);
+                if (keyValue >= 65 && keyValue < (65 + 16))
+                {
+                    byte keyPressed = (byte)(keyValue - 65);
+                    _chip8.SetKey(keyPressed);
+                }
+            }
             _chip8.Run();
             _screenFrame = _chip8.Screen;
-
             base.Update(gameTime);
         }
 
@@ -59,9 +66,9 @@ namespace Chip8_MonoGame
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             _spriteBatch.Begin();
-            for(int y = 0; y < _screenFrame.GetLength(1); y++)
+            for (int y = 0; y < _screenFrame.GetLength(1); y++)
             {
-                for(int x = 0; x < _screenFrame.GetLength(0); x++)
+                for (int x = 0; x < _screenFrame.GetLength(0); x++)
                 {
                     if (_screenFrame[x, y] == true)
                     {

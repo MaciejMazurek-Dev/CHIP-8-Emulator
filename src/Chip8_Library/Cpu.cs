@@ -39,6 +39,7 @@
         private Display _displayBus;
         private Keyboard _keyboardBus;
         private Timers _timers;
+        private bool _isPaused;
 
         public Cpu(Memory memoryBus, Display display, Keyboard keyboard, Timers timers)
         {
@@ -48,20 +49,25 @@
             _timers = timers;
 
             PC = 512; //0x200
-            SP = 0; 
+            SP = 0;
+
+            _isPaused = false;
         }
         public void Tick()
         {
-            Fetch();
+            if (!_isPaused)
+            {
+                Fetch();
+            }
             DecodeAndExecute();
         }
 
         private void Fetch()
         {
-                IR = (ushort)(((_memoryBus.GetByte(PC) << 8)));
-                PC++;
-                IR = (ushort)(IR & 0xFF00 | _memoryBus.GetByte(PC));
-                PC++;
+            IR = (ushort)(((_memoryBus.GetByte(PC) << 8)));
+            PC++;
+            IR = (ushort)(IR & 0xFF00 | _memoryBus.GetByte(PC));
+            PC++;
         }
         private void DecodeAndExecute()
         {
@@ -241,9 +247,9 @@
                     break;
                 //DXYN - Display N-byte sprite starting at memory location I at (X, Y), set VF = collision.
                 case 0xD000:
-                    byte nValue =(byte)(IR & 0x000F);
+                    byte nValue = (byte)(IR & 0x000F);
                     bool shouldSetRegisterVF = _displayBus.DrawSprite(registerX, registerY, I, nValue);
-                    if(shouldSetRegisterVF)
+                    if (shouldSetRegisterVF)
                     {
                         VF = 1;
                     }
@@ -251,7 +257,7 @@
                     {
                         VF = 0;
                     }
-                        break;
+                    break;
                 case 0xE000:
                     {
                         switch (IR & 0x00F0)
@@ -277,7 +283,7 @@
                     break;
                 case 0xF000:
                     {
-                        switch(IR & 0x00FF)
+                        switch (IR & 0x00FF)
                         {
                             //FX07 - Sets register X to the value of the delay timer
                             case 0x0007:
@@ -285,7 +291,13 @@
                                 break;
                             //FX0A - A key press is awaited, and then stored in register X 
                             case 0x000A:
-                                registerX = _keyboardBus.GetKey();
+                                _isPaused = true;
+                                byte? key = _keyboardBus.KeyPress();
+                                if (key != null)
+                                {
+                                    registerX = (byte)key;
+                                    _isPaused = false;
+                                }
                                 break;
                             //FX15 - Sets the delay timer to register X
                             case 0x0015:
@@ -308,7 +320,7 @@
                     break;
             }
         }
-        
+
         private ref byte GetRegister(byte register)
         {
             switch (register)

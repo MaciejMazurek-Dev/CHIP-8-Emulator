@@ -8,8 +8,8 @@ namespace Chip8_Library
         public byte delayTime = 0;
         public byte soundTime = 0;
 
-        private Timer _delayTimer = new Timer(1000);
-        private Timer _soundTimer = new Timer(1000);
+        private Timer _delayTimer = new Timer(1000 / 60);
+        private Timer _soundTimer = new Timer(1000 / 60);
 
         public void SetDelayTimer(byte seconds)
         {

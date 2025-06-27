@@ -14,7 +14,11 @@
                 return display.screen;
             }
         }
-        
+        public void SetKey(byte key)
+        {
+            keyboard.SetKey(key);
+        }
+
         public Chip8()
         {
             memory = new();
@@ -31,7 +35,8 @@
         }
         public void Run()
         {
-                cpu.Tick();
+            cpu.Tick();
+            keyboard.Reset();
         }
     }
 }

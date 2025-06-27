@@ -23,9 +23,25 @@
             key[15] = false;
         }
 
-        public byte GetKey()
+        public void SetKey(byte keyNumber)
+        {
+            key[keyNumber] = true;
+
+        }
+        public void Reset()
+        {
+            for(int i = 0; i < key.Length; i++)
+            {
+                if (key[i] == true)
+                {
+                    key[i] = false;
+                }
+            }
+        }
+        public byte? KeyPress()
         {
             throw new NotImplementedException();
         }
+
     }
 }
