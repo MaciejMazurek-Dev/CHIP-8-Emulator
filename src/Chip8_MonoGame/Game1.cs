@@ -16,12 +16,14 @@ namespace Chip8_MonoGame
         private const int ScreenHeight = 320;
         private const int ScreenWidth = 640;
         private bool[,] _screenFrame;
+        private string _path;
 
-        public Game1()
+        public Game1(string path)
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            _path = path;
         }
 
         protected override void Initialize()
@@ -29,7 +31,7 @@ namespace Chip8_MonoGame
             _graphics.GraphicsDevice.PresentationParameters.BackBufferHeight = ScreenHeight;
             _graphics.GraphicsDevice.PresentationParameters.BackBufferWidth = ScreenWidth;
 
-            byte[] file = File.ReadAllBytes("C:/CODE/Test.ch8");
+            byte[] file = File.ReadAllBytes(_path);
             _chip8.Load(file);
 
             _texture = new Texture2D(GraphicsDevice, 1, 1);
@@ -42,9 +44,10 @@ namespace Chip8_MonoGame
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-        
+        }
         protected override void Update(GameTime gameTime)
         {
+            
             KeyboardState keyboardState = Keyboard.GetState();
             if (keyboardState.GetPressedKeyCount() > 0)
             {
