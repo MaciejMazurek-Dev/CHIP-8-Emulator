@@ -104,8 +104,7 @@
                     byte value = (byte)(IR & 0x00FF);
                     if (registerX == value)
                     {
-                        PC++;
-                        PC++;
+                        PC += 2;
                     }
                     break;
                 //4XNN - Skip next instruction if register X does not equal NN
@@ -113,16 +112,14 @@
                     value = (byte)(IR & 0x00FF);
                     if (registerX != value)
                     {
-                        PC++;
-                        PC++;
+                        PC += 2;
                     }
                     break;
                 //5XY0 - Skip next instruction if register X equals register Y
                 case 0x5000:
                     if (registerX == registerY)
                     {
-                        PC++;
-                        PC++;
+                        PC += 2;
                     }
                     break;
                 //6XNN - Sets register X to NN
@@ -227,8 +224,7 @@
                 case 0x9000:
                     if (registerX != registerY)
                     {
-                        PC++;
-                        PC++;
+                        PC += 2;
                     }
                     break;
                 //ANNN - Sets register I to NNN
@@ -266,16 +262,14 @@
                             case 0x0090:
                                 if (_keyboardBus.key[registerX] == true)
                                 {
-                                    PC++;
-                                    PC++;
+                                    PC += 2;
                                 }
                                 break;
                             //EXA1 - Skips the next instruction if the key stored in register X is not pressed
                             case 0x00A0:
                                 if (_keyboardBus.key[registerX] == false)
                                 {
-                                    PC++;
-                                    PC++;
+                                    PC += 2;
                                 }
                                 break;
                         }
